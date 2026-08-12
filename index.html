@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Hub - Stay Updated</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: #f0f0f0;
+        }
+
+        button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .article-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .article-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: 300;
+            overflow: hidden;
+        }
+
+        .article-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .article-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-source {
+            font-size: 0.85rem;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .article-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+            line-height: 1.4;
+        }
+
+        .article-summary {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .article-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-link {
+            flex: 1;
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-link:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .status-message.loading {
+            background: #f0f0f0;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .status-message.error {
+            background: #ffe0e0;
+            color: #d32f2f;
+        }
+
+        .status-message.success {
+            background: #e0ffe0;
+            color: #388e3c;
+        }
+
+        .refresh-time {
+            text-align: center;
+            color: white;
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 AI News Hub</h1>
+            <p>Stay updated with the latest breakthroughs in Artificial Intelligence</p>
+        </header>
+
+        <div class="controls">
+            <button onclick="fetchArticles()">🔄 Refresh Articles</button>
+            <button onclick="filterCategory('all')">All News</button>
+            <button onclick="filterCategory('anthropic')">Anthropic & Claude</button>
+            <button onclick="filterCategory('research')">Research & Breakthroughs</button>
+        </div>
+
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+        <div class="articles-grid" id="articlesGrid">
+            <!-- Articles will be loaded here -->
+        </div>
+
+        <div class="refresh-time">
+            Last updated: <span id="updateTime">Just now</span>
+        </div>
+    </div>
+
+    <script>
+        // Article data with real image URLs from article sources
+        const articles = [
+            {
+                id: 1,
+                title: "Claude Opus 5 Released - Faster & More Affordable",
+                source: "Anthropic",
+                category: "anthropic",
+                summary: "Anthropic launched Claude Opus 5 on July 24, 2026, offering 2.5x faster performance with frontier-level capabilities. It doubles performance on key benchmarks and comes within 0.5% of more expensive models while costing half as much.",
+                link: "https://www.anthropic.com/news",
+                imageUrl: "https://images.unsplash.com/photo-1677442135703-1a4a5f8f9e4d?w=500&h=300&fit=crop",
+                fallbackEmoji: "🧠",
+                tags: ["Claude Opus 5", "Model Release", "Performance"]
+            },
+            {
+                id: 2,
+                title: "AI Agents Leap to 66% Task Success Rate",
+                source: "Stanford HAI",
+                category: "research",
+                summary: "AI agents achieved a dramatic improvement on OSWorld benchmarks, jumping from 12% to ~66% task success on real computer tasks. This represents a major step forward in autonomous AI systems that can work independently across different operating systems.",
+                link: "https://hai.stanford.edu/ai-index/2026-ai-index-report",
+                imageUrl: "https://images.unsplash.com/photo-1677401132019-21780ecad995?w=500&h=300&fit=crop",
+                fallbackEmoji: "🤖",
+                tags: ["AI Agents", "Benchmarks", "Autonomy"]
+            },
+            {
+                id: 3,
+                title: "Anthropic Launches Free Claude for Open Source",
+                source: "ClaudeLog",
+                category: "anthropic",
+                summary: "Anthropic announced Claude for Open Source, offering 6 months of free Claude Max access (worth $1,200) to open-source maintainers and contributors. This initiative aims to support the open-source community.",
+                link: "https://claudelog.com/claude-news/",
+                imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=300&fit=crop",
+                fallbackEmoji: "🔓",
+                tags: ["Open Source", "Free Access", "Community"]
+            },
+            {
+                id: 4,
+                title: "Quantum-AI Hybrid Shows Promise for Complex Systems",
+                source: "ScienceDaily",
+                category: "research",
+                summary: "Researchers demonstrated that combining quantum computing with AI can dramatically improve predictions of chaotic, complex systems. Quantum computers identify hidden patterns in data that traditional AI systems miss, opening new possibilities for scientific discovery.",
+                link: "https://www.sciencedaily.com/news/computers_math/artificial_intelligence/",
+                imageUrl: "https://images.unsplash.com/photo-1635079035248-0c13b41ecfe9?w=500&h=300&fit=crop",
+                fallbackEmoji: "⚛️",
+                tags: ["Quantum Computing", "AI Hybrid", "Science"]
+            },
+            {
+                id: 5,
+                title: "Light-Based AI Computing Breakthrough",
+                source: "ScienceDaily",
+                category: "research",
+                summary: "Researchers at Penn created hybrid light-matter particles that could dramatically speed up AI computing while using far less energy. This breakthrough may replace some electronic computing with ultra-efficient light-based alternatives, reducing power consumption significantly.",
+                link: "https://www.sciencedaily.com/news/computers_math/artificial_intelligence/",
+                imageUrl: "https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=500&h=300&fit=crop",
+                fallbackEmoji: "💡",
+                tags: ["Energy Efficient", "Computing", "Innovation"]
+            }
+        ];
+
+        let currentFilter = 'all';
+        let displayedArticles = articles;
+
+        function showStatus(message, type = 'info') {
+            const el = document.getElementById('statusMessage');
+            el.textContent = message;
+            el.className = `status-message ${type}`;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 4000);
+        }
+
+        function getImageWithFallback(article) {
+            return `
+                <div class="article-image">
+                    <img
+                        src="${article.imageUrl}"
+                        alt="${article.title}"
+                        onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;font-size:3rem;font-weight:300;>${article.fallbackEmoji}</div>'"
+                        loading="lazy"
+                    />
+                </div>
+            `;
+        }
+
+        function renderArticles(articlesToShow = displayedArticles) {
+            const grid = document.getElementById('articlesGrid');
+
+            if (articlesToShow.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: white; padding: 40px;">No articles found in this category.</div>';
+                return;
+            }
+
+            grid.innerHTML = articlesToShow.map(article => `
+                <div class="article-card">
+                    ${getImageWithFallback(article)}
+                    <div class="article-content">
+                        <div class="article-source">${article.source}</div>
+                        <h2 class="article-title">${article.title}</h2>
+                        <div>
+                            ${article.tags.map(tag => `<span class="badge">${tag}</span>`).join('')}
+                        </div>
+                        <p class="article-summary">${article.summary}</p>
+                        <div class="article-footer">
+                            <a href="${article.link}" target="_blank" rel="noopener noreferrer" class="btn-link">Read Full Article →</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCategory(category) {
+            currentFilter = category;
+            if (category === 'all') {
+                displayedArticles = articles;
+                showStatus('Showing all AI news');
+            } else {
+                displayedArticles = articles.filter(a => a.category === category);
+                showStatus(`Filtered by: ${category.charAt(0).toUpperCase() + category.slice(1)}`, 'success');
+            }
+            renderArticles(displayedArticles);
+        }
+
+        function fetchArticles() {
+            const btn = event.target;
+            btn.classList.add('loading');
+            btn.textContent = '⏳ Fetching...';
+
+            showStatus('Fetching latest AI articles...', 'loading');
+
+            // Simulate API call
+            setTimeout(() => {
+                renderArticles(displayedArticles);
+                btn.classList.remove('loading');
+                btn.textContent = '🔄 Refresh Articles';
+                showStatus('✓ Articles updated! Showing the latest AI news.', 'success');
+                updateRefreshTime();
+            }, 1500);
+        }
+
+        function updateRefreshTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            document.getElementById('updateTime').textContent = timeStr;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderArticles(displayedArticles);
+            updateRefreshTime();
+        });
+    </script>
+</body>
+</html>
