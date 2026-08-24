@@ -74,9 +74,10 @@
             border-color: white;
         }
 
-        button.loading {
-            opacity: 0.6;
-            pointer-events: none;
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .refresh-btn {
@@ -200,29 +201,47 @@
         }
 
         .status-message {
-            background: white;
             padding: 12px 20px;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 20px;
-            color: #555;
             font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #555;
         }
 
         .status-message.loading {
-            background: rgba(255, 255, 255, 0.9);
             color: #667eea;
             font-weight: 600;
         }
 
         .status-message.error {
             background: #ffe0e0;
-            color: #d32f2f;
+            color: #c62828;
         }
 
         .status-message.success {
             background: #e8f5e9;
             color: #2e7d32;
+        }
+
+        .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .skeleton-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            height: 340px;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
         }
 
         .refresh-time {
@@ -241,22 +260,11 @@
         }
 
         @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8rem;
-            }
-
-            .articles-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            button {
-                text-align: center;
-            }
+            header h1 { font-size: 1.8rem; }
+            .articles-grid { grid-template-columns: 1fr; }
+            .loading-grid { grid-template-columns: 1fr; }
+            .controls { flex-direction: column; align-items: stretch; }
+            button { text-align: center; }
         }
     </style>
 </head>
@@ -268,17 +276,23 @@
         </header>
 
         <div class="controls">
-            <button class="refresh-btn" onclick="fetchArticles(event)">🔄 Refresh</button>
-            <button class="filter-btn active" onclick="filterCategory('all', this)">All News</button>
-            <button class="filter-btn" onclick="filterCategory('anthropic', this)">Anthropic & Claude</button>
-            <button class="filter-btn" onclick="filterCategory('research', this)">Research</button>
-            <button class="filter-btn" onclick="filterCategory('open-source', this)">Open Source</button>
-            <button class="filter-btn" onclick="filterCategory('applications', this)">Industry</button>
+            <button class="refresh-btn" id="refreshBtn" onclick="fetchArticles(event)">🔄 Refresh</button>
+            <button class="filter-btn active" onclick="onFilter('all', this)">All News</button>
+            <button class="filter-btn" onclick="onFilter('anthropic', this)">Anthropic & Claude</button>
+            <button class="filter-btn" onclick="onFilter('research', this)">Research</button>
+            <button class="filter-btn" onclick="onFilter('open-source', this)">Open Source</button>
+            <button class="filter-btn" onclick="onFilter('applications', this)">Industry</button>
         </div>
 
         <div id="statusMessage" class="status-message" style="display: none;"></div>
 
-        <div class="articles-grid" id="articlesGrid"></div>
+        <div id="loadingGrid" class="loading-grid">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+
+        <div class="articles-grid" id="articlesGrid" style="display: none;"></div>
 
         <div class="refresh-time">
             Last updated: <span id="updateTime">—</span>
@@ -286,89 +300,190 @@
     </div>
 
     <script>
-        const articles = [
-            {
-                id: 1,
-                title: "Claude Opus 5 Released — Faster & More Affordable",
-                source: "Anthropic",
-                category: "anthropic",
-                summary: "Anthropic launched Claude Opus 5 on July 24, 2026, offering 2.5x faster performance with frontier-level capabilities. It doubles performance on key benchmarks and comes within 0.5% of more expensive models while costing half as much.",
-                link: "https://www.anthropic.com/news",
-                emoji: "🧠",
-                tags: ["Claude Opus 5", "Model Release", "Performance"],
-                published: "2026-07-24"
-            },
-            {
-                id: 2,
-                title: "AI Agents Leap to 66% Task Success Rate",
-                source: "Stanford HAI",
-                category: "research",
-                summary: "AI agents achieved a dramatic improvement on OSWorld benchmarks, jumping from 12% to ~66% task success on real computer tasks. This represents a major step forward in autonomous AI systems that can work independently across different operating systems.",
-                link: "https://hai.stanford.edu/ai-index/2026-ai-index-report",
-                emoji: "🤖",
-                tags: ["AI Agents", "Benchmarks", "Autonomy"],
-                published: "2026-06-18"
-            },
-            {
-                id: 3,
-                title: "Anthropic Launches Free Claude for Open Source",
-                source: "Anthropic",
-                category: "open-source",
-                summary: "Anthropic announced Claude for Open Source, offering 6 months of free Claude Max access (worth $1,200) to open-source maintainers and contributors. This initiative aims to give back to the developer community powering the AI ecosystem.",
-                link: "https://www.anthropic.com/news",
-                emoji: "🔓",
-                tags: ["Open Source", "Free Access", "Community"],
-                published: "2026-07-30"
-            },
-            {
-                id: 4,
-                title: "Quantum-AI Hybrid Shows Promise for Complex Systems",
-                source: "ScienceDaily",
-                category: "research",
-                summary: "Researchers demonstrated that combining quantum computing with AI can dramatically improve predictions of chaotic, complex systems. Quantum computers identify hidden patterns in data that traditional AI systems miss, opening new possibilities for scientific discovery.",
-                link: "https://www.sciencedaily.com/news/computers_math/quantum_computers/",
-                emoji: "⚛️",
-                tags: ["Quantum Computing", "AI Hybrid", "Science"],
-                published: "2026-08-05"
-            },
-            {
-                id: 5,
-                title: "Light-Based AI Computing Breakthrough",
-                source: "ScienceDaily",
-                category: "research",
-                summary: "Researchers at Penn created hybrid light-matter particles that could dramatically speed up AI computing while using far less energy. This breakthrough may replace some electronic computing with ultra-efficient light-based alternatives, reducing power consumption significantly.",
-                link: "https://www.sciencedaily.com/news/matter_energy/optics/",
-                emoji: "💡",
-                tags: ["Energy Efficient", "Computing", "Innovation"],
-                published: "2026-08-14"
-            }
+        // rss2json converts RSS feeds to JSON — free, no key required
+        const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+        const FEEDS = [
+            'https://venturebeat.com/category/ai/feed/',
+            'https://techcrunch.com/tag/artificial-intelligence/feed/',
         ];
 
+        // Fallback if both feeds fail (network down, service outage, etc.)
+        const FALLBACK_ARTICLES = [
+            {
+                id: 'f1', title: 'Claude Opus 5 Released — Faster & More Affordable',
+                source: 'anthropic.com', category: 'anthropic',
+                summary: 'Anthropic launched Claude Opus 5 on July 24, 2026, offering 2.5x faster performance with frontier-level capabilities. It doubles performance on key benchmarks and comes within 0.5% of more expensive models while costing half as much.',
+                link: 'https://www.anthropic.com/news', emoji: '🧠',
+                tags: ['Claude Opus 5', 'Model Release'], published: '2026-07-24T00:00:00Z',
+            },
+            {
+                id: 'f2', title: 'AI Agents Leap to 66% Task Success Rate',
+                source: 'hai.stanford.edu', category: 'research',
+                summary: 'AI agents achieved a dramatic improvement on OSWorld benchmarks, jumping from 12% to ~66% task success on real computer tasks — a major step forward in autonomous AI systems.',
+                link: 'https://hai.stanford.edu/ai-index/2026-ai-index-report', emoji: '🔬',
+                tags: ['AI Agents', 'Benchmarks'], published: '2026-06-18T00:00:00Z',
+            },
+            {
+                id: 'f3', title: 'Anthropic Launches Free Claude for Open Source',
+                source: 'anthropic.com', category: 'open-source',
+                summary: 'Anthropic announced 6 months of free Claude Max access (worth $1,200) to open-source maintainers and contributors, supporting the developer community powering the AI ecosystem.',
+                link: 'https://www.anthropic.com/news', emoji: '🔓',
+                tags: ['Open Source', 'Free Access'], published: '2026-07-30T00:00:00Z',
+            },
+            {
+                id: 'f4', title: 'Quantum-AI Hybrid Shows Promise for Complex Systems',
+                source: 'sciencedaily.com', category: 'research',
+                summary: 'Researchers demonstrated that combining quantum computing with AI can dramatically improve predictions of chaotic, complex systems by identifying hidden patterns traditional AI misses.',
+                link: 'https://www.sciencedaily.com/news/computers_math/quantum_computers/', emoji: '⚛️',
+                tags: ['Quantum Computing', 'AI Hybrid'], published: '2026-08-05T00:00:00Z',
+            },
+            {
+                id: 'f5', title: 'Light-Based AI Computing Breakthrough',
+                source: 'sciencedaily.com', category: 'research',
+                summary: 'Researchers at Penn created hybrid light-matter particles that could dramatically speed up AI computing while using far less energy, potentially replacing electronic computing on key workloads.',
+                link: 'https://www.sciencedaily.com/news/matter_energy/optics/', emoji: '💡',
+                tags: ['Energy Efficient', 'Computing'], published: '2026-08-14T00:00:00Z',
+            },
+        ];
+
+        let allArticles = [];
+        let displayedArticles = [];
         let currentFilter = 'all';
-        let displayedArticles = [...articles];
+
+        // ── Fetch ────────────────────────────────────────────────────────────
+
+        async function loadFeed(rssUrl) {
+            const res = await fetch(RSS2JSON + encodeURIComponent(rssUrl));
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return data.status === 'ok' ? data.items : [];
+        }
+
+        async function fetchArticles(event) {
+            const btn = event ? event.currentTarget : document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Loading…';
+            showStatus('Fetching latest AI news…', 'loading');
+            showSkeletons();
+
+            try {
+                const results = await Promise.allSettled(FEEDS.map(loadFeed));
+                const items = results
+                    .filter(r => r.status === 'fulfilled')
+                    .flatMap(r => r.value);
+
+                if (items.length === 0) throw new Error('All feeds failed');
+
+                const seen = new Set();
+                const unique = items.filter(item => {
+                    if (!item.link || seen.has(item.link)) return false;
+                    seen.add(item.link);
+                    return true;
+                });
+
+                unique.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+                allArticles = unique.slice(0, 10).map((item, i) => {
+                    const category = detectCategory(item.title, item.description);
+                    return {
+                        id: i,
+                        title: item.title || 'Untitled',
+                        source: extractDomain(item.link),
+                        category,
+                        summary: cleanSummary(item.description),
+                        link: item.link,
+                        emoji: categoryEmoji(category),
+                        tags: extractTags(item.title),
+                        published: item.pubDate,
+                    };
+                });
+
+                applyFilter(currentFilter);
+                updateRefreshTime();
+                showStatus(`✓ ${allArticles.length} fresh articles loaded.`, 'success');
+
+            } catch (err) {
+                console.error('Feed fetch failed:', err);
+                if (allArticles.length === 0) {
+                    allArticles = FALLBACK_ARTICLES;
+                    applyFilter(currentFilter);
+                }
+                showStatus('⚠ Could not reach live feeds — showing cached articles.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Refresh';
+                hideSkeletons();
+            }
+        }
+
+        // ── Helpers ──────────────────────────────────────────────────────────
+
+        function extractDomain(url) {
+            try { return new URL(url).hostname.replace(/^www\./, ''); }
+            catch { return url; }
+        }
+
+        function cleanSummary(html) {
+            if (!html) return '';
+            const text = (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').trim().replace(/\s+/g, ' ');
+            if (text.length <= 240) return text;
+            return text.slice(0, text.lastIndexOf(' ', 240)) + '…';
+        }
+
+        function detectCategory(title = '', desc = '') {
+            const t = (title + ' ' + desc).toLowerCase();
+            if (/\banthrop(ic)?\b|\bclaude\b/.test(t)) return 'anthropic';
+            if (/open.?source|\bgithub\b|\bllama\b|\bmistral\b|\bhugging\b|\bgemma\b|\bfalcon\b/.test(t)) return 'open-source';
+            if (/\bhealth\b|\bmedic|\bhospital|\bfinance\b|\bbank|\beducat|\bschool|\benterprise\b|\bstartup\b|\bretail\b|\bmanufactur/.test(t)) return 'applications';
+            return 'research';
+        }
+
+        function categoryEmoji(cat) {
+            return { anthropic: '🧠', 'open-source': '🔓', applications: '🏢', research: '🔬' }[cat] || '📰';
+        }
+
+        const TAG_KEYWORDS = [
+            'AI', 'GPT', 'Claude', 'OpenAI', 'Google', 'Meta', 'Apple', 'Microsoft',
+            'Anthropic', 'DeepMind', 'NVIDIA', 'Robot', 'Agent', 'LLM', 'AGI',
+            'Gemini', 'Grok', 'Llama', 'Mistral', 'Safety', 'Chip', 'Regulation',
+        ];
+
+        function extractTags(title = '') {
+            const found = TAG_KEYWORDS.filter(k => title.toLowerCase().includes(k.toLowerCase()));
+            return found.slice(0, 3).length ? found.slice(0, 3) : ['AI News'];
+        }
 
         function formatDate(dateStr) {
-            const d = new Date(dateStr + 'T00:00:00');
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
-        function showStatus(message, type = 'info') {
-            const el = document.getElementById('statusMessage');
-            el.textContent = message;
-            el.className = `status-message ${type}`;
-            el.style.display = 'block';
-            setTimeout(() => { el.style.display = 'none'; }, 4000);
+        // ── Render ───────────────────────────────────────────────────────────
+
+        function applyFilter(category) {
+            currentFilter = category;
+            displayedArticles = category === 'all'
+                ? allArticles
+                : allArticles.filter(a => a.category === category);
+            renderArticles(displayedArticles);
         }
 
-        function renderArticles(articlesToShow) {
+        function onFilter(category, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            applyFilter(category);
+        }
+
+        function renderArticles(list) {
             const grid = document.getElementById('articlesGrid');
 
-            if (articlesToShow.length === 0) {
-                grid.innerHTML = '<div class="empty-state">No articles in this category yet — check back soon.</div>';
+            if (list.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No articles in this category — try refreshing or pick another filter.</div>';
                 return;
             }
 
-            grid.innerHTML = articlesToShow.map(article => `
+            grid.innerHTML = list.map(article => `
                 <div class="article-card">
                     <div class="article-image">${article.emoji}</div>
                     <div class="article-content">
@@ -378,7 +493,7 @@
                         </div>
                         <h2 class="article-title">${article.title}</h2>
                         <div class="tags">
-                            ${article.tags.map(tag => `<span class="badge">${tag}</span>`).join('')}
+                            ${article.tags.map(t => `<span class="badge">${t}</span>`).join('')}
                         </div>
                         <p class="article-summary">${article.summary}</p>
                         <div class="article-footer">
@@ -389,47 +504,36 @@
             `).join('');
         }
 
-        function filterCategory(category, btn) {
-            currentFilter = category;
+        // ── UI state ─────────────────────────────────────────────────────────
 
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-
-            displayedArticles = category === 'all'
-                ? [...articles]
-                : articles.filter(a => a.category === category);
-
-            renderArticles(displayedArticles);
+        function showStatus(message, type = 'info') {
+            const el = document.getElementById('statusMessage');
+            el.textContent = message;
+            el.className = `status-message ${type}`;
+            el.style.display = 'block';
+            if (type !== 'loading') setTimeout(() => { el.style.display = 'none'; }, 5000);
         }
 
-        function fetchArticles(event) {
-            const btn = event.currentTarget;
-            btn.classList.add('loading');
-            btn.textContent = '⏳ Checking...';
+        function showSkeletons() {
+            document.getElementById('loadingGrid').style.display = 'grid';
+            document.getElementById('articlesGrid').style.display = 'none';
+        }
 
-            showStatus('Checking for new articles...', 'loading');
-
-            setTimeout(() => {
-                renderArticles(displayedArticles);
-                btn.classList.remove('loading');
-                btn.textContent = '🔄 Refresh';
-                showStatus('✓ Up to date — content is curated and refreshed daily.', 'success');
-                updateRefreshTime();
-            }, 1200);
+        function hideSkeletons() {
+            document.getElementById('loadingGrid').style.display = 'none';
+            document.getElementById('articlesGrid').style.display = 'grid';
         }
 
         function updateRefreshTime() {
-            const now = new Date();
-            document.getElementById('updateTime').textContent = now.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
+            document.getElementById('updateTime').textContent = new Date().toLocaleTimeString([], {
+                hour: '2-digit', minute: '2-digit', hour12: true,
             });
         }
 
+        // ── Init ─────────────────────────────────────────────────────────────
+
         document.addEventListener('DOMContentLoaded', () => {
-            renderArticles(displayedArticles);
-            updateRefreshTime();
+            fetchArticles(null);
         });
     </script>
 </body>
