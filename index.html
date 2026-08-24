@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
@@ -38,7 +38,7 @@
 
         header p {
             font-size: 1.1rem;
-            opacity: 0.95;
+            opacity: 0.9;
             font-weight: 300;
         }
 
@@ -51,27 +51,37 @@
         }
 
         button {
-            padding: 12px 24px;
-            border: none;
+            padding: 10px 20px;
+            border: 2px solid transparent;
             border-radius: 8px;
-            background: white;
-            color: #667eea;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
             font-weight: 600;
             cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            background: #f0f0f0;
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+        }
+
+        button.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
         }
 
         button.loading {
-            opacity: 0.7;
+            opacity: 0.6;
             pointer-events: none;
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .articles-grid {
@@ -83,36 +93,28 @@
 
         .article-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            transition: all 0.3s ease;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
             display: flex;
             flex-direction: column;
         }
 
         .article-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+            transform: translateY(-6px);
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
         }
 
         .article-image {
             width: 100%;
-            height: 200px;
+            height: 130px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 3rem;
-            font-weight: 300;
-            overflow: hidden;
-        }
-
-        .article-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            font-size: 3.5rem;
+            user-select: none;
         }
 
         .article-content {
@@ -122,68 +124,93 @@
             flex-direction: column;
         }
 
-        .article-source {
-            font-size: 0.85rem;
-            color: #667eea;
-            font-weight: 600;
-            text-transform: uppercase;
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 8px;
         }
 
-        .article-title {
-            font-size: 1.3rem;
+        .article-source {
+            font-size: 0.8rem;
+            color: #667eea;
             font-weight: 700;
-            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .article-date {
+            font-size: 0.78rem;
+            color: #999;
+        }
+
+        .article-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
             color: #1a1a1a;
             line-height: 1.4;
         }
 
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            padding: 3px 10px;
+            background: #f0f0f8;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
         .article-summary {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             color: #555;
-            line-height: 1.6;
-            margin-bottom: 15px;
+            line-height: 1.65;
             flex-grow: 1;
+            margin-bottom: 16px;
         }
 
         .article-footer {
-            display: flex;
-            gap: 10px;
             margin-top: auto;
         }
 
         .btn-link {
-            flex: 1;
+            display: block;
+            width: 100%;
             padding: 10px 15px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
-            cursor: pointer;
             text-decoration: none;
             text-align: center;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            font-size: 0.88rem;
+            transition: background 0.2s ease;
         }
 
         .btn-link:hover {
             background: #764ba2;
-            transform: translateY(-2px);
         }
 
         .status-message {
             background: white;
-            padding: 15px 20px;
+            padding: 12px 20px;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 20px;
             color: #555;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .status-message.loading {
-            background: #f0f0f0;
+            background: rgba(255, 255, 255, 0.9);
             color: #667eea;
             font-weight: 600;
         }
@@ -194,28 +221,23 @@
         }
 
         .status-message.success {
-            background: #e0ffe0;
-            color: #388e3c;
+            background: #e8f5e9;
+            color: #2e7d32;
         }
 
         .refresh-time {
             text-align: center;
-            color: white;
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.82rem;
+            margin-top: 10px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #667eea;
-            color: white;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-right: 8px;
-            margin-bottom: 10px;
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 50px 20px;
+            font-size: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -229,10 +251,11 @@
 
             .controls {
                 flex-direction: column;
+                align-items: stretch;
             }
 
             button {
-                width: 100%;
+                text-align: center;
             }
         }
     </style>
@@ -245,36 +268,35 @@
         </header>
 
         <div class="controls">
-            <button onclick="fetchArticles()">🔄 Refresh Articles</button>
-            <button onclick="filterCategory('all')">All News</button>
-            <button onclick="filterCategory('anthropic')">Anthropic & Claude</button>
-            <button onclick="filterCategory('research')">Research & Breakthroughs</button>
+            <button class="refresh-btn" onclick="fetchArticles(event)">🔄 Refresh</button>
+            <button class="filter-btn active" onclick="filterCategory('all', this)">All News</button>
+            <button class="filter-btn" onclick="filterCategory('anthropic', this)">Anthropic & Claude</button>
+            <button class="filter-btn" onclick="filterCategory('research', this)">Research</button>
+            <button class="filter-btn" onclick="filterCategory('open-source', this)">Open Source</button>
+            <button class="filter-btn" onclick="filterCategory('applications', this)">Industry</button>
         </div>
 
         <div id="statusMessage" class="status-message" style="display: none;"></div>
 
-        <div class="articles-grid" id="articlesGrid">
-            <!-- Articles will be loaded here -->
-        </div>
+        <div class="articles-grid" id="articlesGrid"></div>
 
         <div class="refresh-time">
-            Last updated: <span id="updateTime">Just now</span>
+            Last updated: <span id="updateTime">—</span>
         </div>
     </div>
 
     <script>
-        // Article data with real image URLs from article sources
         const articles = [
             {
                 id: 1,
-                title: "Claude Opus 5 Released - Faster & More Affordable",
+                title: "Claude Opus 5 Released — Faster & More Affordable",
                 source: "Anthropic",
                 category: "anthropic",
                 summary: "Anthropic launched Claude Opus 5 on July 24, 2026, offering 2.5x faster performance with frontier-level capabilities. It doubles performance on key benchmarks and comes within 0.5% of more expensive models while costing half as much.",
                 link: "https://www.anthropic.com/news",
-                imageUrl: "https://images.unsplash.com/photo-1677442135703-1a4a5f8f9e4d?w=500&h=300&fit=crop",
-                fallbackEmoji: "🧠",
-                tags: ["Claude Opus 5", "Model Release", "Performance"]
+                emoji: "🧠",
+                tags: ["Claude Opus 5", "Model Release", "Performance"],
+                published: "2026-07-24"
             },
             {
                 id: 2,
@@ -283,20 +305,20 @@
                 category: "research",
                 summary: "AI agents achieved a dramatic improvement on OSWorld benchmarks, jumping from 12% to ~66% task success on real computer tasks. This represents a major step forward in autonomous AI systems that can work independently across different operating systems.",
                 link: "https://hai.stanford.edu/ai-index/2026-ai-index-report",
-                imageUrl: "https://images.unsplash.com/photo-1677401132019-21780ecad995?w=500&h=300&fit=crop",
-                fallbackEmoji: "🤖",
-                tags: ["AI Agents", "Benchmarks", "Autonomy"]
+                emoji: "🤖",
+                tags: ["AI Agents", "Benchmarks", "Autonomy"],
+                published: "2026-06-18"
             },
             {
                 id: 3,
                 title: "Anthropic Launches Free Claude for Open Source",
-                source: "ClaudeLog",
-                category: "anthropic",
-                summary: "Anthropic announced Claude for Open Source, offering 6 months of free Claude Max access (worth $1,200) to open-source maintainers and contributors. This initiative aims to support the open-source community.",
-                link: "https://claudelog.com/claude-news/",
-                imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=300&fit=crop",
-                fallbackEmoji: "🔓",
-                tags: ["Open Source", "Free Access", "Community"]
+                source: "Anthropic",
+                category: "open-source",
+                summary: "Anthropic announced Claude for Open Source, offering 6 months of free Claude Max access (worth $1,200) to open-source maintainers and contributors. This initiative aims to give back to the developer community powering the AI ecosystem.",
+                link: "https://www.anthropic.com/news",
+                emoji: "🔓",
+                tags: ["Open Source", "Free Access", "Community"],
+                published: "2026-07-30"
             },
             {
                 id: 4,
@@ -304,10 +326,10 @@
                 source: "ScienceDaily",
                 category: "research",
                 summary: "Researchers demonstrated that combining quantum computing with AI can dramatically improve predictions of chaotic, complex systems. Quantum computers identify hidden patterns in data that traditional AI systems miss, opening new possibilities for scientific discovery.",
-                link: "https://www.sciencedaily.com/news/computers_math/artificial_intelligence/",
-                imageUrl: "https://images.unsplash.com/photo-1635079035248-0c13b41ecfe9?w=500&h=300&fit=crop",
-                fallbackEmoji: "⚛️",
-                tags: ["Quantum Computing", "AI Hybrid", "Science"]
+                link: "https://www.sciencedaily.com/news/computers_math/quantum_computers/",
+                emoji: "⚛️",
+                tags: ["Quantum Computing", "AI Hybrid", "Science"],
+                published: "2026-08-05"
             },
             {
                 id: 5,
@@ -315,54 +337,47 @@
                 source: "ScienceDaily",
                 category: "research",
                 summary: "Researchers at Penn created hybrid light-matter particles that could dramatically speed up AI computing while using far less energy. This breakthrough may replace some electronic computing with ultra-efficient light-based alternatives, reducing power consumption significantly.",
-                link: "https://www.sciencedaily.com/news/computers_math/artificial_intelligence/",
-                imageUrl: "https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=500&h=300&fit=crop",
-                fallbackEmoji: "💡",
-                tags: ["Energy Efficient", "Computing", "Innovation"]
+                link: "https://www.sciencedaily.com/news/matter_energy/optics/",
+                emoji: "💡",
+                tags: ["Energy Efficient", "Computing", "Innovation"],
+                published: "2026-08-14"
             }
         ];
 
         let currentFilter = 'all';
-        let displayedArticles = articles;
+        let displayedArticles = [...articles];
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
 
         function showStatus(message, type = 'info') {
             const el = document.getElementById('statusMessage');
             el.textContent = message;
             el.className = `status-message ${type}`;
             el.style.display = 'block';
-            setTimeout(() => {
-                el.style.display = 'none';
-            }, 4000);
+            setTimeout(() => { el.style.display = 'none'; }, 4000);
         }
 
-        function getImageWithFallback(article) {
-            return `
-                <div class="article-image">
-                    <img
-                        src="${article.imageUrl}"
-                        alt="${article.title}"
-                        onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;font-size:3rem;font-weight:300;>${article.fallbackEmoji}</div>'"
-                        loading="lazy"
-                    />
-                </div>
-            `;
-        }
-
-        function renderArticles(articlesToShow = displayedArticles) {
+        function renderArticles(articlesToShow) {
             const grid = document.getElementById('articlesGrid');
 
             if (articlesToShow.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: white; padding: 40px;">No articles found in this category.</div>';
+                grid.innerHTML = '<div class="empty-state">No articles in this category yet — check back soon.</div>';
                 return;
             }
 
             grid.innerHTML = articlesToShow.map(article => `
                 <div class="article-card">
-                    ${getImageWithFallback(article)}
+                    <div class="article-image">${article.emoji}</div>
                     <div class="article-content">
-                        <div class="article-source">${article.source}</div>
+                        <div class="article-meta">
+                            <span class="article-source">${article.source}</span>
+                            <span class="article-date">${formatDate(article.published)}</span>
+                        </div>
                         <h2 class="article-title">${article.title}</h2>
-                        <div>
+                        <div class="tags">
                             ${article.tags.map(tag => `<span class="badge">${tag}</span>`).join('')}
                         </div>
                         <p class="article-summary">${article.summary}</p>
@@ -374,46 +389,44 @@
             `).join('');
         }
 
-        function filterCategory(category) {
+        function filterCategory(category, btn) {
             currentFilter = category;
-            if (category === 'all') {
-                displayedArticles = articles;
-                showStatus('Showing all AI news');
-            } else {
-                displayedArticles = articles.filter(a => a.category === category);
-                showStatus(`Filtered by: ${category.charAt(0).toUpperCase() + category.slice(1)}`, 'success');
-            }
+
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            displayedArticles = category === 'all'
+                ? [...articles]
+                : articles.filter(a => a.category === category);
+
             renderArticles(displayedArticles);
         }
 
-        function fetchArticles() {
-            const btn = event.target;
+        function fetchArticles(event) {
+            const btn = event.currentTarget;
             btn.classList.add('loading');
-            btn.textContent = '⏳ Fetching...';
+            btn.textContent = '⏳ Checking...';
 
-            showStatus('Fetching latest AI articles...', 'loading');
+            showStatus('Checking for new articles...', 'loading');
 
-            // Simulate API call
             setTimeout(() => {
                 renderArticles(displayedArticles);
                 btn.classList.remove('loading');
-                btn.textContent = '🔄 Refresh Articles';
-                showStatus('✓ Articles updated! Showing the latest AI news.', 'success');
+                btn.textContent = '🔄 Refresh';
+                showStatus('✓ Up to date — content is curated and refreshed daily.', 'success');
                 updateRefreshTime();
-            }, 1500);
+            }, 1200);
         }
 
         function updateRefreshTime() {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString([], {
+            document.getElementById('updateTime').textContent = now.toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
             });
-            document.getElementById('updateTime').textContent = timeStr;
         }
 
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             renderArticles(displayedArticles);
             updateRefreshTime();
