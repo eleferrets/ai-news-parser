@@ -384,7 +384,7 @@
 
                 unique.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-                allArticles = unique.slice(0, 10).map((item, i) => {
+                allArticles = unique.map((item, i) => {
                     const category = detectCategory(item.title, item.description);
                     return {
                         id: i,
