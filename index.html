@@ -263,52 +263,62 @@
 
 <script>
 // ── Sources ──────────────────────────────────────────────────────────────────
-// All are free public RSS feeds, no API keys required.
-// We route them through allorigins.win which is a free open CORS proxy.
+// Free public RSS feeds that work well through open proxies.
 const SOURCES = [
   {
-    id: 'google',
-    label: 'Google News',
-    url: 'https://news.google.com/rss/search?q=artificial+intelligence+AI&hl=en-US&gl=US&ceid=US:en',
-  },
-  {
-    id: 'techcrunch',
-    label: 'TechCrunch AI',
-    url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
-  },
-  {
-    id: 'verge',
-    label: 'The Verge AI',
-    url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
-  },
-  {
-    id: 'venturebeat',
-    label: 'VentureBeat AI',
-    url: 'https://venturebeat.com/category/ai/feed/',
-  },
-  {
-    id: 'wired',
-    label: 'Wired AI',
-    url: 'https://www.wired.com/feed/tag/artificial-intelligence/latest/rss',
-  },
-  {
     id: 'hnai',
-    label: 'HN: AI',
-    url: 'https://hnrss.org/newest?q=AI+LLM+GPT+machine+learning&points=20',
+    label: 'Hacker News AI',
+    url: 'https://hnrss.org/newest?q=AI+LLM+GPT+machine+learning+OpenAI+Anthropic&points=10',
+  },
+  {
+    id: 'arxiv',
+    label: 'ArXiv AI',
+    url: 'https://rss.arxiv.org/rss/cs.AI',
+  },
+  {
+    id: 'mit',
+    label: 'MIT Tech Review',
+    url: 'https://www.technologyreview.com/feed/',
+  },
+  {
+    id: 'guardian',
+    label: 'The Guardian AI',
+    url: 'https://www.theguardian.com/technology/artificialintelligenceai/rss',
+  },
+  {
+    id: 'bbc',
+    label: 'BBC Tech',
+    url: 'https://feeds.bbci.co.uk/news/technology/rss.xml',
+  },
+  {
+    id: 'arstechnica',
+    label: 'Ars Technica AI',
+    url: 'https://feeds.arstechnica.com/arstechnica/technology-lab',
   },
 ];
 
-// ── CORS Proxy ────────────────────────────────────────────────────────────────
-// allorigins.win is free, open-source, and requires no signup.
-// Falls back to corsproxy.io if allorigins fails.
-function proxyUrl(rawUrl) {
-  return `https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}`;
-}
-function proxyUrl2(rawUrl) {
-  return `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`;
+// ── CORS Proxies ──────────────────────────────────────────────────────────────
+// rss2json.com: purpose-built browser RSS service, returns JSON, no key needed (10k/day free).
+// allorigins.win /raw: fallback raw proxy.
+// Both are free and require no signup or API key.
+
+async function fetchViaRss2Json(rssUrl) {
+  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=20`;
+  const res = await fetch(api, { signal: AbortSignal.timeout(12000) });
+  if (!res.ok) throw new Error('rss2json failed');
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error('rss2json error: ' + json.message);
+  return json;
 }
 
-// ── RSS Parser ────────────────────────────────────────────────────────────────
+async function fetchViaAllOrigins(rssUrl) {
+  const api = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
+  const res = await fetch(api, { signal: AbortSignal.timeout(12000) });
+  if (!res.ok) throw new Error('allorigins failed');
+  return res.text();
+}
+
+// ── RSS Parser (for raw XML fallback) ────────────────────────────────────────
 function parseRSS(xmlText, sourceId) {
   const dp = new DOMParser();
   const doc = dp.parseFromString(xmlText, 'text/xml');
@@ -318,8 +328,8 @@ function parseRSS(xmlText, sourceId) {
     : Array.from(doc.querySelectorAll('item'));
 
   return items.slice(0, 20).map(item => {
-    const getText = (sel, ...fallbacks) => {
-      for (const s of [sel, ...fallbacks]) {
+    const getText = (...sels) => {
+      for (const s of sels) {
         const el = item.querySelector(s);
         if (el) return (el.textContent || '').trim();
       }
@@ -331,26 +341,36 @@ function parseRSS(xmlText, sourceId) {
     };
 
     const title = getText('title');
-    const link = getAttr('link[href]', 'href') || getText('link') || getAttr('enclosure', 'url') || '';
-    const pubDate = getText('pubDate') || getText('published') || getText('updated') || '';
-    const desc = stripHtml(getText('description') || getText('summary') || getText('content'));
+    const link = getAttr('link[href]', 'href') || getText('link') || '';
+    const pubDate = getText('pubDate', 'published', 'updated') || '';
+    const desc = stripHtml(getText('description', 'summary', 'content'));
 
-    // Try to find a thumbnail
     let img = '';
     const mediaThumbnail = item.querySelector('thumbnail');
-    const mediaContent = item.querySelector('content[medium="image"], content[type^="image"]');
+    const mediaContent = item.querySelector('content[medium="image"]');
     const enclosure = item.querySelector('enclosure[type^="image"]');
     if (mediaThumbnail) img = mediaThumbnail.getAttribute('url') || '';
     else if (mediaContent) img = mediaContent.getAttribute('url') || '';
     else if (enclosure) img = enclosure.getAttribute('url') || '';
     if (!img) {
-      // Try to extract from description html
-      const imgMatch = (getText('description') || '').match(/<img[^>]+src=["']([^"']+)["']/i);
-      if (imgMatch) img = imgMatch[1];
+      const m = (getText('description') || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (m) img = m[1];
     }
 
     return { title, link, pubDate, desc, img, sourceId };
   }).filter(a => a.title && a.link);
+}
+
+// Convert rss2json items to our internal format
+function parseRss2JsonItems(items, sourceId) {
+  return items.map(it => ({
+    title: it.title || '',
+    link: it.link || it.guid || '',
+    pubDate: it.pubDate || '',
+    desc: stripHtml(it.description || it.content || ''),
+    img: it.thumbnail || it.enclosure?.link || '',
+    sourceId,
+  })).filter(a => a.title && a.link);
 }
 
 function stripHtml(html) {
@@ -380,22 +400,17 @@ let lastUpdated = null;
 
 // ── Fetch one feed ────────────────────────────────────────────────────────────
 async function fetchFeed(source) {
+  // Try rss2json first — it handles CORS natively and returns clean JSON
   try {
-    const res = await fetch(proxyUrl(source.url), { signal: AbortSignal.timeout(12000) });
-    if (!res.ok) throw new Error('proxy1 failed');
-    const json = await res.json();
-    return parseRSS(json.contents || '', source.id);
-  } catch {
-    // fallback proxy
-    try {
-      const res2 = await fetch(proxyUrl2(source.url), { signal: AbortSignal.timeout(12000) });
-      if (!res2.ok) throw new Error('proxy2 failed');
-      const text2 = await res2.text();
-      return parseRSS(text2, source.id);
-    } catch {
-      return [];
-    }
-  }
+    const json = await fetchViaRss2Json(source.url);
+    return parseRss2JsonItems(json.items || [], source.id);
+  } catch {}
+  // Fallback: allorigins raw proxy + manual XML parse
+  try {
+    const xml = await fetchViaAllOrigins(source.url);
+    return parseRSS(xml, source.id);
+  } catch {}
+  return [];
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────────
